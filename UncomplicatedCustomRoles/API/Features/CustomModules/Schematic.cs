@@ -10,20 +10,20 @@ namespace UncomplicatedCustomRoles.API.Features.CustomModules
             "name"
         };
 
-        private string name => StringArgs.TryGetValue("name", out string name) ? name : null;
+        private string TargetName => StringArgs.TryGetValue("name", out string name) ? name : null;
 
         public override void OnAdded()
         {
-            if (name is null)
+            if (TargetName is null)
                 return;
 
             SchematicController controller = CustomRole.Player.GameObject.AddComponent<SchematicController>();
-            controller.Init(name);
+            controller.Init(Name);
         }
 
         public override void OnRemoved()
         {
-            if (name is null)
+            if (TargetName is null)
                 return;
 
             UnityEngine.Object.Destroy(CustomRole.Player.GameObject.GetComponent<EscapeController>());

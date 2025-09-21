@@ -209,14 +209,9 @@ namespace UncomplicatedCustomRoles.Manager.NET
         }
 
 #nullable enable
-        internal async Task<Tuple<HttpStatusCode, string?>> VersionInfo()
+        internal string VersionInfo()
         {
-            HttpResponseMessage message = await HttpClient.GetAsync($"{Endpoint.Replace("/v2", "")}/vinfo/info?v={Plugin.Instance.Version.ToString(4)}&type=EXILED");
-
-            if (message.StatusCode != HttpStatusCode.OK)
-                return new(message.StatusCode, null);
-
-            return new(message.StatusCode, await message.Content.ReadAsStringAsync());
+            return HttpQuery.Get($"{Endpoint.Replace("/v2", "")}/vinfo/info?v={Plugin.Instance.Version.ToString(4)}&type=EXILED");
         }
     }
 }

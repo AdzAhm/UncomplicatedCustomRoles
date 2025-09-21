@@ -30,7 +30,6 @@ using System.Linq;
 using Exiled.API.Extensions;
 using UnityEngine;
 using System.Collections.Concurrent;
-using RelativePositioning;
 
 namespace UncomplicatedCustomRoles.Events
 {
