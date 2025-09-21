@@ -59,6 +59,8 @@
     <Compile Include="API\Features\Behaviour\AhpBehaviour.cs" />
     <Compile Include="API\Features\Behaviour\HealthBehaviour.cs" />
     <Compile Include="API\Features\Behaviour\HumeShieldBehaviour.cs" />
+    <Compile Include="API\Features\Controllers\EscapeController.cs" />
+    <Compile Include="API\Features\Controllers\SchematicController.cs" />
     <Compile Include="API\Features\CustomModules\ColorfulNickname.cs" />
     <Compile Include="API\Features\CustomModules\ColorfulRaName.cs" />
     <Compile Include="API\Features\CustomModules\CustomModule.cs" />
@@ -73,6 +75,7 @@
     <Compile Include="API\Features\CustomModules\LifeStealer.cs" />
     <Compile Include="API\Features\CustomModules\NotAffectedByAppearance.cs" />
     <Compile Include="API\Features\CustomModules\PacifismUntilDamage.cs" />
+    <Compile Include="API\Features\CustomModules\Schematic.cs" />
     <Compile Include="API\Features\CustomModules\SilentAnnouncer.cs" />
     <Compile Include="API\Features\CustomModules\SilentWalker.cs" />
     <Compile Include="API\Features\CustomModules\TutorialRagdoll.cs" />
@@ -129,6 +132,7 @@
     <Compile Include="Integrations\ScriptedEvents.cs" />
     <Compile Include="API\Interfaces\IUCRCommand.cs" />
     <Compile Include="Integrations\UCI.cs" />
+    <Compile Include="Integrations\UCT.cs" />
     <Compile Include="Manager\FileConfigs.cs" />
     <Compile Include="API\Features\Effect.cs" />
     <Compile Include="Manager\NET\HttpManager.cs" />
@@ -199,5 +203,6 @@
       <Version>4.3.4</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

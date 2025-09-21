@@ -72,7 +72,8 @@ namespace UncomplicatedCustomRoles.Integrations
             } 
             else // Normal method
             {
-                MethodInfo resultMethod = type.GetMethod(argument);
+                
+                MethodInfo resultMethod = type.GetMethods().FirstOrDefault(m => m.Name == argument);
 
                 if (resultMethod is null)
                 {

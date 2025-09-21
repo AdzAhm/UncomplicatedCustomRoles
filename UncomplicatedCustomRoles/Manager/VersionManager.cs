@@ -10,6 +10,7 @@
 
 using Exiled.API.Features;
 using Exiled.Loader;
+using MEC;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -17,6 +18,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using UncomplicatedCustomRoles.Manager.NET;
+using UnityEngine;
 
 namespace UncomplicatedCustomRoles.Manager
 {
@@ -86,14 +88,7 @@ namespace UncomplicatedCustomRoles.Manager
                 {
                     RecallMessageSender();
                     if ((bool)VersionInfo.RecallImportant)
-                        await Task.Run(async delegate
-                        {
-                            while (true)
-                            {
-                                await Task.Delay(5000);
-                                RecallMessageSender();
-                            }
-                        });
+                        Timing.CallContinuously(5000, RecallMessageSender);
                 }
             } 
             catch (Exception e)
