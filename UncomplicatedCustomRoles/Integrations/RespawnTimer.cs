@@ -8,10 +8,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Reflection;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
-using Exiled.API.Interfaces;
 using PlayerRoles;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.API.Interfaces;
@@ -24,15 +22,11 @@ namespace UncomplicatedCustomRoles.Integrations
 
     internal class RespawnTimer
     {
-        public static readonly IPlugin<IConfig> RespawnTimerPlugin = Exiled.Loader.Loader.GetPlugin("RespawnTimer");
-
-        public static readonly MethodInfo AddReplaceHelper = RespawnTimerPlugin?.Assembly.GetType("RespawnTimer.API.Placeholder")?.GetMethod("Register");
-
         const string RespawnTimerTextKey = "CUSTOM_ROLE";
 
         public static void Enable()
         {
-            AddReplaceHelper?.Invoke(null, new object[]
+            DynamicInvoke.GetMethod("RespawnTimer", "RespawnTimer.API.Placeholder.Register")?.Invoke(null, new object[]
             {
                 RespawnTimerTextKey,
                 GetPublicRoleName

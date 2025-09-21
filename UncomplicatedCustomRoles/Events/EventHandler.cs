@@ -30,6 +30,7 @@ using System.Linq;
 using Exiled.API.Extensions;
 using UnityEngine;
 using System.Collections.Concurrent;
+using RelativePositioning;
 
 namespace UncomplicatedCustomRoles.Events
 {
@@ -168,7 +169,7 @@ namespace UncomplicatedCustomRoles.Events
             ev.IsAllowed = false;
             RagdollAppearanceQueue.Remove(ev.Player.Id);
 
-            RagdollData data = new(ev.Player.ReferenceHub, ev.DamageHandlerBase, RoleTypeId.Tutorial, ev.Position, ev.Rotation, ev.Nickname, ev.CreationTime);
+            RagdollData data = new(ev.Player.ReferenceHub, ev.DamageHandlerBase, RoleTypeId.Tutorial, new(ev.Position), ev.Rotation, ev.Nickname, ev.CreationTime);
             Ragdoll.CreateAndSpawn(data);
         }
 

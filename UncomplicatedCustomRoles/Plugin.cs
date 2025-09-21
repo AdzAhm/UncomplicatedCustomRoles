@@ -125,8 +125,6 @@ namespace UncomplicatedCustomRoles
 
         public override void OnDisabled()
         {
-            RespawnTimer.Disable();
-
             _harmony.UnpatchAll();
 
             CustomHandlersManager.UnregisterEventsHandler(LabApiEventHandler);
