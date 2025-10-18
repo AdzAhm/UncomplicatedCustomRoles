@@ -28,7 +28,6 @@ using PlayerStatsSystem;
 using Subtitles;
 using Utils.Networking;
 using UncomplicatedCustomRoles.API.Features.CustomModules;
-using System.Text.RegularExpressions;
 using UncomplicatedCustomRoles.Integrations;
 using UncomplicatedCustomRoles.API.Features.Controllers;
 
@@ -39,7 +38,7 @@ namespace UncomplicatedCustomRoles.Manager
 {
     internal class SpawnManager
     {
-        public static IReadOnlyDictionary<string, string> colorMap = new Dictionary<string, string>()
+        public static readonly IReadOnlyDictionary<string, string> colorMap = new Dictionary<string, string>()
         {
             { "pink", "#FF96DE" },
             { "red", "#C50000" },
@@ -348,7 +347,7 @@ namespace UncomplicatedCustomRoles.Manager
                     if ((Elements[2] is "InternalTeam" || Elements[2] is "IT") && Enum.TryParse(Elements[3], out Team team))
                         AsCuffedByInternalTeam.TryAdd(team, Data);
                     else if ((Elements[2] is "CustomTeam" || Elements[2] is "CT") && uint.TryParse(Elements[3], out uint customTeam))
-                        AsCuffedByCustomTeam.TryAdd< uint, KeyValuePair<bool, object>?>(customTeam, Data);
+                        AsCuffedByCustomTeam.TryAdd(customTeam, Data);
                     else if ((Elements[2] is "CustomRole" || Elements[2] is "CR") && int.TryParse(Elements[3], out int id) && CustomRole.CustomRoles.ContainsKey(id))
                         AsCuffedByCustomRole.TryAdd(id, Data);
                     else

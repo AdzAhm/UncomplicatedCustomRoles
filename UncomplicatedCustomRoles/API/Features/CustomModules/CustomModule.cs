@@ -8,6 +8,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -57,6 +58,11 @@ namespace UncomplicatedCustomRoles.API.Features.CustomModules
         /// Gets the instance of the <see cref="SummonedCustomRole"/> in which the current <see cref="CustomModule"/> is embedded
         /// </summary>
         public SummonedCustomRole CustomRole { get; private set; }
+
+        /// <summary>
+        /// Gets the instance of the <see cref="Exiled.API.Features.Player"/> in which the current <see cref="CustomModule"/> is embedded
+        /// </summary>
+        public Player Player => CustomRole.Player;
 
         internal void Initialize(SummonedCustomRole summonedCustomRole, Dictionary<string, object> args)
         {
@@ -108,6 +114,11 @@ namespace UncomplicatedCustomRoles.API.Features.CustomModules
         /// <param name="def"></param>
         /// <returns></returns>
         public string TryGetStringValue(string param, string def = null) => StringArgs.TryGetValue(param, out string value) ? value : def;
+
+        /// <summary>
+        /// Logs an error message indicating that the custom module failed to load or had an issue.
+        /// </summary>
+        public void ThrowError(string message) => LogManager.Error($"[CustomModule] Failed to load CustomModule '{Name}': {message}");
 
 #nullable enable
         internal static List<CustomModule> Load(List<object> modules, SummonedCustomRole summonedCustomRole)

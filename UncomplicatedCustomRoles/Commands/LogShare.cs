@@ -12,7 +12,6 @@ using CommandSystem;
 using System;
 using System.Net;
 using UncomplicatedCustomRoles.Manager;
-using System.Net.Http;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
@@ -46,7 +45,7 @@ namespace UncomplicatedCustomRoles.Commands
 
             Task.Run(() =>
             {
-                HttpStatusCode Response = LogManager.SendReport(out string content);
+                HttpStatusCode Response = LogManager.SendReport(out string content, arguments.Count > 0);
                 try
                 {
                     if (Response is HttpStatusCode.OK)

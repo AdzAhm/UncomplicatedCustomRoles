@@ -10,11 +10,12 @@
 
 using Discord;
 using Exiled.API.Features;
+using Exiled.API.Features.Pools;
 using Exiled.Loader;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.API.Interfaces;
@@ -25,8 +26,6 @@ namespace UncomplicatedCustomRoles.Manager
     {
         // We should store the data here
         public static readonly HashSet<LogEntry> History = new();
-
-        public static bool MessageSent { get; internal set; } = false;
 
         public static void Debug(string message)
         {
@@ -62,17 +61,14 @@ namespace UncomplicatedCustomRoles.Manager
 
         public static void System(string message) => History.Add(new(DateTimeOffset.Now.ToUnixTimeMilliseconds(), "System", message));
 
-        internal static HttpStatusCode SendReport(out string content)
+        internal static HttpStatusCode SendReport(out string content, bool online = true)
         {
             content = null;
-
-            if (MessageSent)
-                return HttpStatusCode.Forbidden;
 
             if (History.Count < 1)
                 return HttpStatusCode.Forbidden;
 
-            StringBuilder builder = new();
+            StringBuilder builder = StringBuilderPool.Pool.Get();
 
             foreach (LogEntry Element in History)
                 builder.Append($"{Element}\n");
@@ -83,12 +79,13 @@ namespace UncomplicatedCustomRoles.Manager
             foreach (ICustomRole Role in CustomRole.CustomRoles.Values)
                 builder.Append($"{Loader.Serializer.Serialize(Role)}\n\n---\n\n");
 
-            HttpStatusCode Response = Plugin.HttpManager.ShareLogs(builder.ToString(), out content);
+            HttpStatusCode response = HttpStatusCode.OK;
+            if (online)
+                response = Plugin.HttpManager.ShareLogs(StringBuilderPool.Pool.ToStringReturn(builder), out content);
+            else
+                File.WriteAllText(Path.Combine(Paths.Configs, $"UCR-Report-{DateTimeOffset.Now.ToUnixTimeSeconds()}.txt"), StringBuilderPool.Pool.ToStringReturn(builder));
 
-            if (Response is HttpStatusCode.OK)
-                MessageSent = true;
-
-            return Response;
+            return response;
         }
     }
 }

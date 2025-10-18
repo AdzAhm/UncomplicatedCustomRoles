@@ -176,7 +176,6 @@ namespace UncomplicatedCustomRoles.Events
         {
             Started = false;
             InfiniteEffect.Terminate();
-            LogManager.MessageSent = false;
         }
 
         public void OnChangingRole(ChangingRoleEventArgs ev)
