@@ -107,6 +107,7 @@
     <Compile Include="Commands\Reload.cs" />
     <Compile Include="Commands\Spawn.cs" />
     <Compile Include="Commands\SpawnPoint.cs" />
+    <Compile Include="Commands\TryTeam.cs" />
     <Compile Include="Commands\Update.cs" />
     <Compile Include="Commands\Version.cs" />
     <Compile Include="Compatibility\CompatibilityManager.cs" />
@@ -189,7 +190,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ExMod.Exiled">
-      <Version>9.9.2</Version>
+      <Version>9.10.2</Version>
     </PackageReference>
     <PackageReference Include="Lib.Harmony">
       <Version>2.2.2</Version>
