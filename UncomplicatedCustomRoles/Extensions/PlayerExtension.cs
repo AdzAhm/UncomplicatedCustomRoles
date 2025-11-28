@@ -12,7 +12,6 @@ using Exiled.API.Features;
 using MEC;
 using PlayerRoles;
 using System;
-using System.Text;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.API.Interfaces;
 using UncomplicatedCustomRoles.Manager;
@@ -66,7 +65,7 @@ namespace UncomplicatedCustomRoles.Extensions
         public static void SetCustomRole(this Player player, int role)
         {
             SpawnManager.ClearCustomTypes(player);
-            Timing.RunCoroutine(Events.EventHandler.DoSpawnPlayer(player, role));
+            Timing.RunCoroutine(SpawnManager.AsyncPlayerSpawner(player, role));
         }
 
         /// <summary>
@@ -77,7 +76,7 @@ namespace UncomplicatedCustomRoles.Extensions
         public static void SetCustomRole(this Player player, ICustomRole role)
         {
             SpawnManager.ClearCustomTypes(player);
-            Timing.RunCoroutine(Events.EventHandler.DoSpawnPlayer(player, role.Id));
+            Timing.RunCoroutine(SpawnManager.AsyncPlayerSpawner(player, role.Id));
         }
 
         /// <summary>

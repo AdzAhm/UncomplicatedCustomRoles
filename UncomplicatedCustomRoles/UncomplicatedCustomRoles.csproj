@@ -61,17 +61,20 @@
     <Compile Include="API\Features\Behaviour\HumeShieldBehaviour.cs" />
     <Compile Include="API\Features\Controllers\EscapeController.cs" />
     <Compile Include="API\Features\Controllers\SchematicController.cs" />
+    <Compile Include="API\Features\CustomModules\AmnesiaResistance.cs" />
     <Compile Include="API\Features\CustomModules\ColorfulNickname.cs" />
     <Compile Include="API\Features\CustomModules\ColorfulRaName.cs" />
     <Compile Include="API\Features\CustomModules\CustomModule.cs" />
     <Compile Include="API\Features\CustomModules\CustomPermissions.cs" />
     <Compile Include="API\Features\CustomModules\CustomScpAnnouncer.cs" />
+    <Compile Include="API\Features\CustomModules\DamageResistance.cs" />
     <Compile Include="API\Features\CustomModules\DoNotTrigger096.cs" />
     <Compile Include="API\Features\CustomModules\DoNotTriggerTeslaGates.cs" />
     <Compile Include="API\Features\CustomModules\DropItemOnDeath.cs" />
     <Compile Include="API\Features\CustomModules\DropNothingOnDeath.cs" />
     <Compile Include="API\Features\CustomModules\FullCandyBag.cs" />
     <Compile Include="API\Features\CustomModules\ItemBan.cs" />
+    <Compile Include="API\Features\CustomModules\KeepInventoryOnEscape.cs" />
     <Compile Include="API\Features\CustomModules\LifeStealer.cs" />
     <Compile Include="API\Features\CustomModules\NotAffectedByAppearance.cs" />
     <Compile Include="API\Features\CustomModules\PacifismUntilDamage.cs" />
@@ -107,7 +110,6 @@
     <Compile Include="Commands\Reload.cs" />
     <Compile Include="Commands\Spawn.cs" />
     <Compile Include="Commands\SpawnPoint.cs" />
-    <Compile Include="Commands\TryTeam.cs" />
     <Compile Include="Commands\Update.cs" />
     <Compile Include="Commands\Version.cs" />
     <Compile Include="Compatibility\CompatibilityManager.cs" />
@@ -122,8 +124,11 @@
     <Compile Include="Config.cs" />
     <Compile Include="API\Enums\CustomFlags.cs" />
     <Compile Include="API\Enums\SpawnType.cs" />
-    <Compile Include="Events\EventHandler.cs" />
+    <Compile Include="Events\EventHandlerBase.cs" />
     <Compile Include="Events\LabApiEventHandler.cs" />
+    <Compile Include="Events\PlayerEventHandler.cs" />
+    <Compile Include="Events\ScpEventHandler.cs" />
+    <Compile Include="Events\ServerEventHandler.cs" />
     <Compile Include="Extensions\CompatibilityExtension.cs" />
     <Compile Include="Extensions\DictionaryExtension.cs" />
     <Compile Include="Extensions\ListExtension.cs" />
@@ -167,25 +172,21 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(EXILED_REFERENCES)\Assembly-CSharp-firstpass.dll</HintPath>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\..\Desktop\EXILED_REF\ReferencesLatest\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="Mirror">
-      <HintPath>$(EXILED_REFERENCES)\Mirror.dll</HintPath>
+      <HintPath>..\..\..\..\Desktop\EXILED_REF\ReferencesLatest\Mirror.dll</HintPath>
     </Reference>
-    <Reference Include="Pooling, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(EXILED_REFERENCES)\Pooling.dll</HintPath>
+    <Reference Include="Pooling">
+      <HintPath>..\..\..\..\Desktop\EXILED_REF\ReferencesLatest\Pooling.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(EXILED_REFERENCES)\UnityEngine.CoreModule.dll</HintPath>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\..\Desktop\EXILED_REF\ReferencesLatest\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(EXILED_REFERENCES)\UnityEngine.PhysicsModule.dll</HintPath>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\..\..\Desktop\EXILED_REF\ReferencesLatest\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

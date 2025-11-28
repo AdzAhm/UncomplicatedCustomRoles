@@ -10,6 +10,7 @@
 
 using Exiled.API.Enums;
 using PlayerRoles;
+using UncomplicatedCustomRoles.Events;
 using UnityEngine;
 
 namespace UncomplicatedCustomRoles.API.Features.Controllers
@@ -27,7 +28,7 @@ namespace UncomplicatedCustomRoles.API.Features.Controllers
         {
             foreach (Bounds escapeZone in global::Escape.EscapeZones)
                 if (escapeZone.Contains(_role.Player.Position))
-                    Plugin.Instance.Handler.OnEscaping(new(_role.Player.ReferenceHub, RoleTypeId.ChaosConscript, EscapeScenario.CustomEscape));
+                    PlayerEventHandler.Instance.OnEscaping(new(_role.Player.ReferenceHub, RoleTypeId.ChaosConscript, EscapeScenario.CustomEscape));
         }
 
         private void OnDestroy()

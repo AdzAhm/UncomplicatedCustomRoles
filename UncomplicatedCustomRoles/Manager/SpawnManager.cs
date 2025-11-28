@@ -30,6 +30,9 @@ using Utils.Networking;
 using UncomplicatedCustomRoles.API.Features.CustomModules;
 using UncomplicatedCustomRoles.Integrations;
 using UncomplicatedCustomRoles.API.Features.Controllers;
+using InventorySystem;
+using Exiled.API.Features.Pickups;
+using UncomplicatedCustomRoles.Events;
 
 // Mormora, la gente mormora
 // falla tacere praticando l'allegria
@@ -68,6 +71,12 @@ namespace UncomplicatedCustomRoles.Manager
         {
             if (SummonedCustomRole.TryGet(player, out SummonedCustomRole role))
                 role.Destroy();
+        }
+
+        public static IEnumerator<float> AsyncPlayerSpawner(Player player, int id, bool doBypassRoleOverwrite = true)
+        {
+            yield return Timing.WaitForSeconds(0.1f);
+            SummonCustomSubclass(player, id, doBypassRoleOverwrite);
         }
 
         public static void SummonCustomSubclass(Player player, int id, bool doBypassRoleOverwrite = true)
@@ -200,6 +209,27 @@ namespace UncomplicatedCustomRoles.Manager
 
                         Player.AddAmmo(Ammo.Key, Ammo.Value);
                     }
+
+                // Reset the inventory if we need to add the old one
+                if (PlayerEventHandler.RespawnInventoryQueue.TryGetValue(Player.Id, out Tuple<List<ItemType>, Dictionary<ItemType, ushort>, bool> oldInventory))
+                {
+                    Player.ClearInventory();
+                    Player.ClearAmmo();
+
+                    foreach (ItemType item in oldInventory.Item1)
+                        if (!oldInventory.Item3)
+                            Player.AddItem(item);
+                        else
+                            Pickup.CreateAndSpawn(item, Player.Position, previousOwner: Player);
+
+                    foreach (KeyValuePair<ItemType, ushort> item in oldInventory.Item2)
+                        if (!oldInventory.Item3)
+                            Player.Inventory.ServerAddAmmo(item.Key, item.Value);
+                        else
+                            Pickup.CreateAndSpawn(item.Key, Player.Position, previousOwner: Player);
+
+                    PlayerEventHandler.RespawnInventoryQueue.TryRemove(Player.Id, out _);
+                }
 
                 PlayerInfoArea InfoArea = Player.ReferenceHub.nicknameSync.Network_playerInfoToShow;
 
@@ -391,7 +421,6 @@ namespace UncomplicatedCustomRoles.Manager
         }
 
 #nullable enable
-#pragma warning disable CS8602 // Possibile deferenziamento di un valore Null
         public static ICustomRole? DoEvaluateSpawnForPlayer(Player player, RoleTypeId? role = null)
         {
             role ??= player.Role?.Type;
@@ -426,7 +455,7 @@ namespace UncomplicatedCustomRoles.Manager
             };
 
             foreach (ICustomRole Role in CustomRole.CustomRoles.Values.Where(cr => cr.SpawnSettings is not null))
-                if (!Role.IgnoreSpawnSystem && Player.List.Count(pl => !pl.IsHost) >= Role.SpawnSettings.MinPlayers && SummonedCustomRole.Count(Role) < Role.SpawnSettings.MaxPlayers)
+                if (!Role.IgnoreSpawnSystem && Player.List.Count(pl => !pl.IsHost) >= Role.SpawnSettings?.MinPlayers && SummonedCustomRole.Count(Role) < Role.SpawnSettings.MaxPlayers)
                 {
                     if (Role.SpawnSettings.RequiredPermission is not null && Role.SpawnSettings.RequiredPermission != string.Empty && !player.CheckPermission(Role.SpawnSettings.RequiredPermission))
                     {
