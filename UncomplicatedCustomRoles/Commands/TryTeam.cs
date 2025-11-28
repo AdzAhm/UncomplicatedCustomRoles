@@ -1,7 +1,9 @@
 ﻿using CommandSystem;
 using Exiled.API.Features;
+using PlayerRoles;
 using System;
 using System.Collections.Generic;
+using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.API.Interfaces;
 
 namespace UncomplicatedCustomRoles.Commands
@@ -41,9 +43,14 @@ namespace UncomplicatedCustomRoles.Commands
             Player player = Player.Get(sender);
 
             if (player is not null)
-                response = $"Your team is {player.Role.Team} -- According to referencehub: {player.ReferenceHub.roleManager.CurrentRole.Team} -- Cast: {player.ReferenceHub.roleManager.CurrentRole.GetType().FullName}";
+                response = $"ID: {player.Id} - Your team is {player.Role.Team} -- According to referencehub: {player.ReferenceHub.roleManager.CurrentRole.Team} -- Cast: {player.ReferenceHub.roleManager.CurrentRole.GetType().FullName}";
             else
                 response = "Ur not a player!";
+
+            if (DisguiseTeam.RoleBaseList.TryGetValue(player.Id, out PlayerRoleBase role))
+                response += $"\nDisguised role found: {role.Team} -- Cast: {role.GetType().FullName}";
+            else
+                response += $"\nNo disguised role found in {DisguiseTeam.RoleBaseList.Count}!";
 
             return true;
         }

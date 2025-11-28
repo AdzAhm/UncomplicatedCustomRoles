@@ -9,24 +9,42 @@
  */
 
 using HarmonyLib;
-using LabApi.Features.Wrappers;
 using PlayerRoles;
-using PlayerRoles.PlayableScps;
-using System;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.Manager;
-using static HarmonyLib.AccessTools;
 
 namespace UncomplicatedCustomRoles.Patches
 {
 
-    [HarmonyPatch(typeof(Player), nameof(Player.Team), MethodType.Getter)]
+    /*[HarmonyPatch(typeof(Player), nameof(Player.Team), MethodType.Getter)]
     internal class TeamPatch
     {
         static bool Prefix(Player __instance, ref Team __result) => !DisguiseTeam.List.TryGetValue(__instance.PlayerId, out __result);
+    }*/
+
+    [HarmonyPatch(typeof(PlayerRoleManager), nameof(PlayerRoleManager.CurrentRole), MethodType.Getter)]
+    internal class PlayerRoleManagerPatch
+    {
+        static bool Prefix(PlayerRoleManager __instance, ref PlayerRoleBase __result)
+        {
+            if (__instance.Hub?.netId is 0)
+                return true;
+
+            if (__instance.Hub is not null && DisguiseTeam.RoleBaseList.TryGetValue(__instance.Hub.PlayerId, out PlayerRoleBase role))
+            {
+                if (role is null)
+                    LogManager.Error($"[UCR] Disguised role for player {__instance.Hub.PlayerId} is null!");
+
+                __result = role;
+
+                return false;
+            }
+
+            return true;
+        }
     }
 
-    [HarmonyPatch(typeof(HumanRole), nameof(HumanRole.Team), MethodType.Getter)]
+    /*[HarmonyPatch(typeof(HumanRole), nameof(HumanRole.Team), MethodType.Getter)]
     internal class HumanRolePatch
     {
         private static bool Prefix(PlayerRoleBase __instance, ref Team __result)
@@ -54,5 +72,5 @@ namespace UncomplicatedCustomRoles.Patches
 
             return true;
         }
-    }
+    }*/
 }
