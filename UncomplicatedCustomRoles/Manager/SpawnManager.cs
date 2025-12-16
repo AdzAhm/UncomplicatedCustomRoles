@@ -485,7 +485,7 @@ namespace UncomplicatedCustomRoles.Manager
         {
             float num = AlphaWarheadController.Detonated ? 3.5f : 1f;
 
-            NineTailedFoxAnnouncer.singleton.ServerOnlyAddGlitchyPhrase($"{ScpToCassie(customScpAnnouncer.RoleName)} {baseHandler.CassieDeathAnnouncement.Announcement}", UnityEngine.Random.Range(0.1f, 0.14f) * num, UnityEngine.Random.Range(0.07f, 0.08f) * num);
+            LabApi.Features.Wrappers.Cassie.GlitchyMessage($"{ScpToCassie(customScpAnnouncer.RoleName)} {baseHandler.CassieDeathAnnouncement.Announcement}", UnityEngine.Random.Range(0.1f, 0.14f) * num, UnityEngine.Random.Range(0.07f, 0.08f) * num);
             
             List<SubtitlePart> list = new()
             {

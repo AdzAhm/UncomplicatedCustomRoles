@@ -22,31 +22,5 @@ namespace UncomplicatedCustomRoles.API.Features
         public static readonly ConcurrentDictionary<int, Team> List = new();
 
         public static readonly Dictionary<int, PlayerRoleBase> RoleBaseList = new();
-
-        public static bool IsEnemy(Footprint attacker, ReferenceHub ply)
-        {
-            try
-            {
-                Team attackerTeam = attacker.Role.GetTeam();
-                Team playerTeam = ply.GetTeam();
-
-                if (List.TryGetValue(attacker.PlayerId, out Team _att))
-                    attackerTeam = _att;
-
-                return attackerTeam != playerTeam;
-            } catch (Exception ex)
-            {
-                LogManager.Error(ex.ToString());
-                return false;
-            }
-        }
-
-        public static bool @Handler1(Footprint attacker)
-        {
-            if (List.TryGetValue(attacker.PlayerId,out Team team))
-                return team != Team.SCPs;
-
-            return attacker.Role.GetTeam() != Team.SCPs;
-        }
     }
 }
