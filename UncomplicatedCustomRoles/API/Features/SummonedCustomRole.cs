@@ -198,7 +198,7 @@ namespace UncomplicatedCustomRoles.API.Features
                 if (Role.Team is null)
                     return;
 
-                if (Role.Team is Team.SCPs) 
+                if (Role.Team is Team.SCPs)
                     _roleBase = new FpcStandardScp()
                     {
                         _roleTypeId = Role.Role,
@@ -208,6 +208,11 @@ namespace UncomplicatedCustomRoles.API.Features
                         _hubTransform = originalRole._hubTransform,
                         FpcModule = originalRole.FpcModule,
                         VisibilityController = originalRole.VisibilityController,
+                        VoiceModule = originalRole.VoiceModule,
+                        _lastOwner = Player.ReferenceHub,
+                        Ragdoll = originalRole.Ragdoll,
+                        RoleAvatar = originalRole.RoleAvatar,
+                        SpectatorModule = originalRole.SpectatorModule,
                     };
                 else
                     _roleBase = new HumanRole()
@@ -222,10 +227,18 @@ namespace UncomplicatedCustomRoles.API.Features
                         VisibilityController = originalRole.VisibilityController,
                         VoiceModule = originalRole.VoiceModule,
                         VariantsModule = originalRole.VariantsModule,
-                        
+                        _lastOwner = Player.ReferenceHub,
+                        Ragdoll = originalRole.Ragdoll,
+                        RoleAvatar = originalRole.RoleAvatar,
+                        SpectatorModule = originalRole.SpectatorModule,
                     };
 
-                Timing.CallDelayed(5f, () => DisguiseTeam.RoleBaseList.Add(Player.Id, _roleBase));
+                DisguiseTeam.RoleBaseStats.Add(Player.Id, originalRole.TargetStats);
+
+                Timing.CallDelayed(3.25f, delegate {
+                    _roleBase.Pooled = false;
+                    DisguiseTeam.RoleBaseList.Add(Player.Id, _roleBase);
+                });
             }
             catch (Exception e)
             {
@@ -300,6 +313,7 @@ namespace UncomplicatedCustomRoles.API.Features
 
                 DisguiseTeam.List.TryRemove(Player.Id, out _);
                 DisguiseTeam.RoleBaseList.TryRemove(Player.Id);
+                DisguiseTeam.RoleBaseStats.TryRemove(Player.Id);
 
                 // Reset ammo limit
                 if (Role.Ammo is Dictionary<AmmoType, ushort> ammoList && ammoList.Count > 0)

@@ -8,20 +8,25 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Achievements.Handlers;
+using Footprinting;
 using HarmonyLib;
+using InventorySystem.Items.ThrowableProjectiles;
 using PlayerRoles;
+using PlayerRoles.PlayableScps.Scp079.Rewards;
+using PlayerRoles.PlayableScps.Scp939.Mimicry;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Emit;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.Manager;
 
+using static HarmonyLib.AccessTools;
+
 namespace UncomplicatedCustomRoles.Patches
 {
-
-    /*[HarmonyPatch(typeof(Player), nameof(Player.Team), MethodType.Getter)]
-    internal class TeamPatch
-    {
-        static bool Prefix(Player __instance, ref Team __result) => !DisguiseTeam.List.TryGetValue(__instance.PlayerId, out __result);
-    }*/
-
     [HarmonyPatch(typeof(PlayerRoleManager), nameof(PlayerRoleManager.CurrentRole), MethodType.Getter)]
     internal class PlayerRoleManagerPatch
     {
@@ -41,6 +46,76 @@ namespace UncomplicatedCustomRoles.Patches
             }
 
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerRolesUtils), nameof(PlayerRolesUtils.GetRoleId))]
+    internal class PlayerRolesUtilsPatch
+    {
+        private static readonly Dictionary<Team, RoleTypeId> _roleTeam = new()
+        {
+            { Team.ClassD, RoleTypeId.ClassD },
+            { Team.SCPs, RoleTypeId.Scp0492 },
+            { Team.Scientists, RoleTypeId.Scientist },
+            { Team.ChaosInsurgency, RoleTypeId.ChaosConscript },
+            { Team.FoundationForces, RoleTypeId.NtfPrivate },
+            { Team.Flamingos, RoleTypeId.Flamingo },
+            { Team.OtherAlive, RoleTypeId.Tutorial }
+        };
+
+        private static readonly HashSet<string> allowedMethods = new()
+        {
+            $"{typeof(HitboxIdentity)}::{nameof(HitboxIdentity.IsEnemy)}",
+            $"{typeof(GeneralKillsHandler)}::{nameof(GeneralKillsHandler.HandleAttackerKill)}",
+            $"{typeof(TerminationRewards)}::{nameof(TerminationRewards.EvaluateGainReason)}",
+            $"{typeof(MimicryRecorder)}::{nameof(MimicryRecorder.WasKilledByTeammate)}",
+            $"{typeof(ExplosionGrenade)}::{nameof(ExplosionGrenade.Explode)}"
+        };
+
+        static bool Prefix(ReferenceHub hub, ref RoleTypeId __result)
+        {
+            if (!DisguiseTeam.List.TryGetValue(hub.PlayerId, out Team team))
+                return true;
+
+            StackTrace trace = new();
+
+            for (int i = 0; i < trace.FrameCount; i++)
+            {
+                StackFrame frame = trace.GetFrame(i);
+
+                if (allowedMethods.Contains($"{frame.GetMethod().DeclaringType.FullName}::{frame.GetMethod().Name}"))
+                {
+                    //LogManager.Info($"[{i}] - {frame.GetMethod().DeclaringType.FullName}::{frame.GetMethod().Name} - {frame.GetFileName()} - {frame.GetFileLineNumber()}");
+                    __result = _roleTeam[team];
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(ExplosionGrenade), nameof(ExplosionGrenade.ExplodeDestructible))]
+    internal class GrenadeTranspiler
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> newInstructions = new(instructions);
+            int index = -1;
+
+            for (int i = 0; i < newInstructions.Count; i++)
+            {
+                if (newInstructions[i].opcode == OpCodes.Call && newInstructions[i].operand is MethodInfo method && method == Method(typeof(PlayerRolesUtils), nameof(PlayerRolesUtils.GetRoleId), new Type[] { typeof(ReferenceHub) }))
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            newInstructions[index+1].operand = Method(typeof(PlayerRolesUtils), nameof(PlayerRolesUtils.GetTeam), new Type[] { typeof(ReferenceHub) });
+            newInstructions.RemoveAt(index);
+
+            return newInstructions;
         }
     }
 }

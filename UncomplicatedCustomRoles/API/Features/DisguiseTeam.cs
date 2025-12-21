@@ -10,6 +10,7 @@
 
 using Footprinting;
 using PlayerRoles;
+using PlayerStatsSystem;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,5 +23,7 @@ namespace UncomplicatedCustomRoles.API.Features
         public static readonly ConcurrentDictionary<int, Team> List = new();
 
         public static readonly Dictionary<int, PlayerRoleBase> RoleBaseList = new();
+
+        public static readonly Dictionary<int, PlayerStats> RoleBaseStats = new();
     }
 }
