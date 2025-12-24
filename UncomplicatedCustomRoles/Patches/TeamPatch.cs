@@ -9,9 +9,11 @@
  */
 
 using Achievements.Handlers;
-using Footprinting;
 using HarmonyLib;
+using InventorySystem.Disarming;
+using InventorySystem.Items;
 using InventorySystem.Items.ThrowableProjectiles;
+using InventorySystem.Searching;
 using PlayerRoles;
 using PlayerRoles.PlayableScps.Scp079.Rewards;
 using PlayerRoles.PlayableScps.Scp939.Mimicry;
@@ -116,6 +118,21 @@ namespace UncomplicatedCustomRoles.Patches
             newInstructions.RemoveAt(index);
 
             return newInstructions;
+        }
+    }
+
+
+    [HarmonyPatch(typeof(PickupSearchCompletor), nameof(PickupSearchCompletor.ValidateAny))]
+    public class PickupSearchCompletorPatch
+    {
+        static bool Prefix(PickupSearchCompletor __instance, ref bool __result)
+        {
+            if (!DisguiseTeam.List.TryGetValue(__instance.Hub.PlayerId, out Team team) || team != Team.SCPs || __instance.Hub.roleManager.CurrentRole.RoleTypeId.GetTeam() == Team.SCPs) 
+                return true;
+
+            __result = !__instance.TargetPickup.Info.Locked && !__instance.Hub.inventory.IsDisarmed() && !__instance.Hub.interCoordinator.AnyBlocker(BlockedInteraction.GrabItems);
+
+            return false;
         }
     }
 }
