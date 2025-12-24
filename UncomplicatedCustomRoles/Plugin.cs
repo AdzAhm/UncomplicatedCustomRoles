@@ -13,19 +13,13 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using UncomplicatedCustomRoles.Integrations;
 using UncomplicatedCustomRoles.Manager;
-using Handler = UncomplicatedCustomRoles.Events.EventHandler;
-using PlayerHandler = Exiled.Events.Handlers.Player;
-using Scp049Handler = Exiled.Events.Handlers.Scp049;
-using Scp096Handler = Exiled.Events.Handlers.Scp096;
-using ServerHandler = Exiled.Events.Handlers.Server;
-using Scp330Handler = Exiled.Events.Handlers.Scp330;
-using WarheadHandler = Exiled.Events.Handlers.Warhead;
 using UncomplicatedCustomRoles.API.Features;
 using HarmonyLib;
 using UncomplicatedCustomRoles.Manager.NET;
 using System.Threading.Tasks;
 using UncomplicatedCustomRoles.Events;
 using LabApi.Events.CustomHandlers;
+using System.Collections.Generic;
 
 namespace UncomplicatedCustomRoles
 {
@@ -37,15 +31,13 @@ namespace UncomplicatedCustomRoles
 
         public override string Author => "FoxWorn3365, Dr.Agenda";
 
-        public override Version Version { get; } = new(9, 0, 0);
+        public override Version Version { get; } = new(9, 2, 0, 0);
 
         public override Version RequiredExiledVersion { get; } = new(9, 1, 0);
 
         public override PluginPriority Priority => PluginPriority.Higher;
 
         internal static Plugin Instance;
-
-        internal Handler Handler;
 
         internal LabApiEventHandler LabApiEventHandler;
 
@@ -60,39 +52,18 @@ namespace UncomplicatedCustomRoles
             // QoL things
             LogManager.History.Clear();
             API.Features.Escape.Bucket.Clear();
-
-            Handler = new();
             HttpManager = new("ucr");
 
             CustomRole.CustomRoles.Clear();
             CustomRole.NotLoadedRoles.Clear();
 
-            ServerHandler.RespawningTeam += Handler.OnRespawningWave;
-            ServerHandler.RoundStarted += Handler.OnRoundStarted;
-            ServerHandler.RoundEnded += Handler.OnRoundEnded;
-            ServerHandler.WaitingForPlayers += Handler.OnWaitingForPlayers;
+            EventHandlerBase.Register(new List<EventHandlerBase>()
+            {
+                new ServerEventHandler(),
+                new PlayerEventHandler(),
+                new ScpEventHandler()
+            });
 
-            PlayerHandler.ActivatingGenerator += Handler.OnGenerator;
-            PlayerHandler.Dying += Handler.OnDying;
-            PlayerHandler.Died += Handler.OnDied;
-            PlayerHandler.SpawningRagdoll += Handler.OnRagdollSpawn;
-            PlayerHandler.Spawned += Handler.OnPlayerSpawned;
-            PlayerHandler.ChangingRole += Handler.OnChangingRole;
-            PlayerHandler.ReceivingEffect += Handler.OnReceivingEffect;
-            PlayerHandler.Escaping += Handler.OnEscaping;
-            PlayerHandler.UsedItem += Handler.OnItemUsed;
-            PlayerHandler.Hurting += Handler.OnHurting;
-            PlayerHandler.Hurt += Handler.OnHurt;
-            PlayerHandler.PickingUpItem += Handler.OnPickingUp;
-            PlayerHandler.Verified += Handler.OnVerified;
-
-            Scp049Handler.FinishingRecall += Handler.OnFinishingRecall;
-
-            Scp096Handler.AddingTarget += Handler.OnAddingTarget;
-
-            Scp330Handler.InteractingScp330 += Handler.OnInteractingScp330;
-
-            WarheadHandler.Starting += Handler.OnWarheadLever;
 
             LabApiEventHandler = new();
             CustomHandlersManager.RegisterEventsHandler(LabApiEventHandler);
@@ -125,44 +96,14 @@ namespace UncomplicatedCustomRoles
 
         public override void OnDisabled()
         {
-            RespawnTimer.Disable();
-
             _harmony.UnpatchAll();
 
             CustomHandlersManager.UnregisterEventsHandler(LabApiEventHandler);
             LabApiEventHandler = null;
 
-            ServerHandler.RespawningTeam -= Handler.OnRespawningWave;
-            ServerHandler.RoundEnded -= Handler.OnRoundEnded;
-            ServerHandler.RoundStarted -= Handler.OnRoundStarted;
-            ServerHandler.WaitingForPlayers -= Handler.OnWaitingForPlayers;
-
-            // PlayerHandler.Verified -= Handler.OnVerified;
-            PlayerHandler.ActivatingGenerator -= Handler.OnGenerator;
-            PlayerHandler.Dying -= Handler.OnDying;
-            PlayerHandler.Died -= Handler.OnDied;
-            PlayerHandler.SpawningRagdoll -= Handler.OnRagdollSpawn;
-            PlayerHandler.Spawned -= Handler.OnPlayerSpawned;
-            PlayerHandler.ChangingRole -= Handler.OnChangingRole;
-            PlayerHandler.ReceivingEffect -= Handler.OnReceivingEffect;
-            PlayerHandler.Escaping -= Handler.OnEscaping;
-            PlayerHandler.UsedItem -= Handler.OnItemUsed;
-            PlayerHandler.Hurting -= Handler.OnHurting;
-            PlayerHandler.Hurt -= Handler.OnHurt;
-            PlayerHandler.PickingUpItem -= Handler.OnPickingUp;
-            PlayerHandler.Verified -= Handler.OnVerified;
-
-            Scp049Handler.FinishingRecall -= Handler.OnFinishingRecall;
-
-            Scp096Handler.AddingTarget -= Handler.OnAddingTarget;
-
-            Scp330Handler.InteractingScp330 -= Handler.OnInteractingScp330;
-
-            WarheadHandler.Starting -= Handler.OnWarheadLever;
+            EventHandlerBase.UnregisterAll();
 
             HttpManager.UnregisterEvents();
-
-            Handler = null;
 
             Instance = null;
 

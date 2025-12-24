@@ -82,6 +82,15 @@ namespace UncomplicatedCustomRoles.Compatibility
         {
             LoadStatusType status = CustomRole.InternalRegister(role);
 
+            if (status is LoadStatusType.SameId && Plugin.Instance.Config.UseIdFixer && RolePaths.TryGetValue(role, out string rolePath))
+            {
+                string roleId = GetRoleFileElement(File.ReadAllLines(rolePath), "id:");
+                role.Id = int.Parse(roleId);
+                LogManager.Info($"Updated ID for role at {rolePath} - New id: {role.Id} ({roleId})", ConsoleColor.DarkMagenta);
+
+                status = CustomRole.InternalRegister(role);
+            }
+
             if (status is LoadStatusType.Success)
                 LogManager.Info($"{prefix}Successfully loaded CustomRole {role}!", ConsoleColor.DarkGray);
             else if (status is LoadStatusType.ValidatorError) 

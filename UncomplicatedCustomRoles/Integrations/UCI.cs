@@ -17,17 +17,11 @@ using UncomplicatedCustomRoles.Manager;
 
 namespace UncomplicatedCustomRoles.Integrations
 {
-    internal class UCI
+    internal static class UCI
     {
         public static Assembly Assembly = Loader.Plugins.FirstOrDefault(p => p.Name is "UncomplicatedCustomItems")?.Assembly;
 
-        public static Type Utilities = Assembly?.GetType("UncomplicatedCustomItems.API.Utilities");
-
         public static Type SummonedCustomItem = Assembly?.GetType("UncomplicatedCustomItems.API.Features.SummonedCustomItem");
-
-        public static MethodInfo HasCustomItemMethod = Utilities?.GetMethod("IsCustomItem", BindingFlags.Public | BindingFlags.Static);
-
-        public static MethodInfo GetCustomItemMethod = Utilities?.GetMethod("GetCustomItem", BindingFlags.Public | BindingFlags.Static);
 
         public static bool HasCustomItem(uint id, out object customItem)
         {
@@ -38,9 +32,9 @@ namespace UncomplicatedCustomRoles.Integrations
 
             try
             {
-                if ((bool?)HasCustomItemMethod?.Invoke(null, new object[] { id }) ?? false)
+                if ((bool?)DynamicInvoke.GetMethod("UncomplicatedCustomItems", "UncomplicatedCustomItems.API.Utilities.IsCustomItem")?.Invoke(null, new object[] { id }) ?? false)
                 {
-                    customItem = GetCustomItemMethod?.Invoke(null, new object[] { id });
+                    customItem = DynamicInvoke.GetMethod("UncomplicatedCustomItems", "UncomplicatedCustomItems.API.Utilities.GetCustomItem")?.Invoke(null, new object[] { id });
 
                     return customItem is not null;
                 }

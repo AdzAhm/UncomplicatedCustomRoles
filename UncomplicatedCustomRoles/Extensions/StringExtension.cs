@@ -8,8 +8,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace UncomplicatedCustomRoles.Extensions
 {
@@ -57,6 +60,20 @@ namespace UncomplicatedCustomRoles.Extensions
                 str += " ";
 
             return str;
+        }
+
+        public static HttpStatusCode GetStatusCode(this string str, out string message)
+        {
+            JObject obj = JObject.Parse(str);
+
+            message = null;
+            if (obj.TryGetValue("message", out JToken token))
+                message = token.ToString();
+
+            if (obj.TryGetValue("status", out JToken status) && Enum.TryParse(status.ToString(), out HttpStatusCode statusCode))
+                return statusCode;
+
+            return HttpStatusCode.Unused;
         }
     }
 }
