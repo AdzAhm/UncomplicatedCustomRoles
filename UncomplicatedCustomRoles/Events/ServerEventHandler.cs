@@ -4,7 +4,7 @@ using Exiled.Events.EventArgs.Warhead;
 using PlayerRoles;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.Manager;
-
+using UncomplicatedCustomRoles.Patches;
 using ServerHandler = Exiled.Events.Handlers.Server;
 using WarheadHandler = Exiled.Events.Handlers.Warhead;
 
@@ -18,6 +18,7 @@ namespace UncomplicatedCustomRoles.Events
             ServerHandler.RoundStarted += OnRoundStarted;
             ServerHandler.RoundEnded += OnRoundEnded;
             ServerHandler.WaitingForPlayers += OnWaitingForPlayers;
+            ServerHandler.RestartingRound += OnRestartingRound;
 
             // Warhead
             WarheadHandler.Starting += OnWarheadLever;
@@ -29,6 +30,7 @@ namespace UncomplicatedCustomRoles.Events
             ServerHandler.RoundStarted -= OnRoundStarted;
             ServerHandler.RoundEnded -= OnRoundEnded;
             ServerHandler.WaitingForPlayers -= OnWaitingForPlayers;
+            ServerHandler.RestartingRound -= OnRestartingRound;
 
             // Warhead
             WarheadHandler.Starting -= OnWarheadLever;
@@ -50,10 +52,16 @@ namespace UncomplicatedCustomRoles.Events
             InfiniteEffect.EffectAssociationAllowed = true;
             InfiniteEffect.Start();
         }
+        
         public void OnRoundEnded(RoundEndedEventArgs _)
         {
             Started = false;
             InfiniteEffect.Terminate();
+        }
+        
+        public void OnRestartingRound()
+        {
+            Announcer.SavedCustomAnnouncements.Clear();
         }
 
         public void OnRespawningWave(RespawningTeamEventArgs ev)
