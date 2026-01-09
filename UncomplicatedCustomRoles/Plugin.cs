@@ -33,7 +33,7 @@ namespace UncomplicatedCustomRoles
 
         public override Version Version { get; } = new(9, 2, 0, 0);
 
-        public override Version RequiredExiledVersion { get; } = new(9, 1, 0);
+        public override Version RequiredExiledVersion { get; } = new(9, 12, 2);
 
         public override PluginPriority Priority => PluginPriority.Higher;
 

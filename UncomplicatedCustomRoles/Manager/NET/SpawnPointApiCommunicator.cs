@@ -9,11 +9,11 @@
  */
 
 using Exiled.API.Features;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using UncomplicatedCustomRoles.API.Enums;
 using UncomplicatedCustomRoles.API.Features;
@@ -52,7 +52,7 @@ namespace UncomplicatedCustomRoles.Manager.NET
                 return;
 
             if (!File.Exists(FilePath))
-                File.WriteAllText(FilePath, JsonConvert.SerializeObject(new SpawnPoint[] { }));
+                File.WriteAllText(FilePath, JsonSerializer.Serialize(new SpawnPoint[] { }));
 
             Task.Run(LoadFromCloud);
         }
@@ -90,13 +90,13 @@ namespace UncomplicatedCustomRoles.Manager.NET
         {
             if (Local)
             {
-                File.WriteAllText(FilePath, JsonConvert.SerializeObject(SpawnPoint.List.Where(s => s.Sync)));
+                File.WriteAllText(FilePath, JsonSerializer.Serialize(SpawnPoint.List.Where(s => s.Sync), new JsonSerializerOptions { WriteIndented = true }));
                 return;
             }
 
             try
             {
-                string answer = HttpQuery.Post($"{Endpoint}/update?port={Server.Port}", JsonConvert.SerializeObject(SpawnPoint.List), "application/json");
+                string answer = HttpQuery.Post($"{Endpoint}/update?port={Server.Port}", JsonSerializer.Serialize(SpawnPoint.List), "application/json");
                 if (answer is "FILE_TOO_BIG_OR_SMALL" or "LIMIT_EXCEEDED" || answer.StartsWith("QTA_TOO_MUCH_"))
                     LogManager.Warn($"UCS cloud has declined the request: you have reached the maximum number of SpawnPoints: the current limit is: {MaxSpawnPoints} SpawnPoints per Server port and 10 total Server port!\nPlease contact us through our Discord! -- Server says: {answer}");
                 else if (answer is "UNKNOWN_LOGIC" or "")
@@ -147,7 +147,7 @@ namespace UncomplicatedCustomRoles.Manager.NET
 
         private static void TryLoadSpawnPoints(string json)
         {
-            List<SpawnPoint> List = JsonConvert.DeserializeObject<List<SpawnPoint>>(json);
+            List<SpawnPoint> List = JsonSerializer.Deserialize<List<SpawnPoint>>(json);
 
             foreach (SpawnPoint SpawnPoint in List)
                 SpawnPoint.List.Add(SpawnPoint);

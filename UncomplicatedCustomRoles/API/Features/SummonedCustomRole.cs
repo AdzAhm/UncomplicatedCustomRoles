@@ -28,6 +28,7 @@ using UncomplicatedCustomRoles.API.Struct;
 using UncomplicatedCustomRoles.Commands;
 using UncomplicatedCustomRoles.Extensions;
 using UncomplicatedCustomRoles.Manager;
+using UncomplicatedCustomRoles.Patches;
 using UnityEngine;
 
 namespace UncomplicatedCustomRoles.API.Features
@@ -169,7 +170,7 @@ namespace UncomplicatedCustomRoles.API.Features
             {
                 DisguiseTeam.List[Player.Id] = (Team)Role.Team;
                 EvaluateRoleBase();
-                LogManager.Info($"EVALUATED ROLEBASE {_roleBase.GetType().FullName} with team {_roleBase?.Team}");
+                LogManager.Debug($"EVALUATED ROLEBASE {_roleBase.GetType().FullName} with team {_roleBase?.Team}");
             }
 
             UnityEngine.Object.Destroy(Player.GameObject.GetComponent<EscapeController>());
@@ -232,8 +233,6 @@ namespace UncomplicatedCustomRoles.API.Features
                         RoleAvatar = originalRole.RoleAvatar,
                         SpectatorModule = originalRole.SpectatorModule,
                     };
-
-                DisguiseTeam.RoleBaseStats.Add(Player.Id, originalRole.TargetStats);
 
                 Timing.CallDelayed(3.25f, delegate {
                     _roleBase.Pooled = false;
@@ -313,7 +312,6 @@ namespace UncomplicatedCustomRoles.API.Features
 
                 DisguiseTeam.List.TryRemove(Player.Id, out _);
                 DisguiseTeam.RoleBaseList.TryRemove(Player.Id);
-                DisguiseTeam.RoleBaseStats.TryRemove(Player.Id);
 
                 // Reset ammo limit
                 if (Role.Ammo is Dictionary<AmmoType, ushort> ammoList && ammoList.Count > 0)
@@ -626,7 +624,7 @@ namespace UncomplicatedCustomRoles.API.Features
         public static void TryParseRemoteAdmin(ReferenceHub player, StringBuilder builder) //REF
         {
             if (Plugin.HttpManager.Credits.TryGetValue(player.authManager.UserId, out Triplet<string, string, bool> tag))
-                if (Plugin.HttpManager.OrgPlayerRole.ContainsKey(player.authManager.UserId))
+                if (Plugin.HttpManager.IsJobRole.Contains(player.authManager.UserId))
                     builder.AppendLine($"\nUCS Status: <color=#0b55b0><b>[UCS EMPLOYEE]</b></color> <color={SpawnManager.colorMap[tag.Second]}>{tag.First}</color>");
                 else
                     builder.AppendLine($"\nUCS Status: <color=#c9ad2c><b>[UCS CONTRIBUTOR]</b></color> <color={SpawnManager.colorMap[tag.Second]}>{tag.First}</color>");

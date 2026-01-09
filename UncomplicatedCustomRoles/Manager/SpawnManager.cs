@@ -15,6 +15,7 @@ using System.Linq;
 using UnityEngine;
 using Exiled.CustomItems.API.Features;
 using System;
+using Cassie;
 using UncomplicatedCustomRoles.Extensions;
 using MEC;
 using Exiled.Permissions.Extensions;
@@ -26,12 +27,13 @@ using Exiled.API.Extensions;
 using PlayerRoles;
 using PlayerStatsSystem;
 using Subtitles;
-using Utils.Networking;
 using UncomplicatedCustomRoles.API.Features.CustomModules;
 using UncomplicatedCustomRoles.Integrations;
 using UncomplicatedCustomRoles.API.Features.Controllers;
 using InventorySystem;
 using Exiled.API.Features.Pickups;
+using Footprinting;
+using LabApi.Events.Arguments.ServerEvents;
 using UncomplicatedCustomRoles.Events;
 
 // Mormora, la gente mormora
@@ -305,17 +307,16 @@ namespace UncomplicatedCustomRoles.Manager
                     ChangedNick = true;
                 }
 
-                if (Role.OverrideRoleName)
-                    Player.ApplyCustomInfoAndRoleName(PlaceholderManager.ApplyPlaceholders(Role.CustomInfo, Player, Role), Role.Name);
-                else
-                    Player.ApplyClearCustomInfo(PlaceholderManager.ApplyPlaceholders(Role.CustomInfo, Player, Role));
-
-                // We need the role appereance also here!
-                if (Role.RoleAppearance != Role.Role)
+                Timing.CallDelayed(0.75f, () =>
                 {
-                    LogManager.Debug($"Changing the appearance of the role {Role.Id} [{Role.Name}] to {Role.RoleAppearance}");
-                    Timing.CallDelayed(0.75f, () => Player.ChangeAppearance(Role.RoleAppearance, LoadAppearanceAffectedPlayers(Player), true));
-                }
+                    if (Role.RoleAppearance != Role.Role)
+                    {
+                        LogManager.Debug($"Changing the appearance of the role {Role.Id} [{Role.Name}] to {Role.RoleAppearance}");
+                        Player.ChangeAppearance(Role.RoleAppearance, LoadAppearanceAffectedPlayers(Player), true);
+                    }
+                        
+                    Player.RefreshInfoArea();
+                });
 
                 LogManager.Debug($"{Player} successfully spawned as {Role.Name} ({Role.Id})!");
 
@@ -481,30 +482,29 @@ namespace UncomplicatedCustomRoles.Manager
             return null;
         }
 
-        internal static void HandleRecontainmentAnnoucement(DamageHandlerBase baseHandler, CustomScpAnnouncer customScpAnnouncer)
+        public static void AnnounceScpTermination(ReferenceHub scp, DamageHandlerBase hit)
         {
-            float num = AlphaWarheadController.Detonated ? 3.5f : 1f;
-
-            LabApi.Features.Wrappers.Cassie.GlitchyMessage($"{ScpToCassie(customScpAnnouncer.RoleName)} {baseHandler.CassieDeathAnnouncement.Announcement}", UnityEngine.Random.Range(0.1f, 0.14f) * num, UnityEngine.Random.Range(0.07f, 0.08f) * num);
-            
-            List<SubtitlePart> list = new()
+            string announcement1 = hit.CassieDeathAnnouncement.Announcement;
+            SubtitlePart[] subtitleParts1 = hit.CassieDeathAnnouncement.SubtitleParts;
+            if (string.IsNullOrEmpty(announcement1))
+             return;
+            foreach (CassieAnnouncement cassieAnnouncement in CassieAnnouncementDispatcher.AllAnnouncementsPreview)
             {
-                new(SubtitleType.SCP, new string[] { customScpAnnouncer.RoleName.Replace("SCP", string.Empty).Replace("scp", string.Empty).Replace("Scp", string.Empty).Replace("SCP-", string.Empty).Replace("scp-", string.Empty).Replace("Scp-", string.Empty) }),
-            };
-
-            list.AddRange(baseHandler.CassieDeathAnnouncement.SubtitleParts);
-
-            new SubtitleMessage(list.ToArray()).SendToAuthenticated(0);
-        }
-
-        private static string ScpToCassie(string scp)
-        {
-            string result = string.Empty;
-
-            if (scp.ToUpper().Contains("SCP"))
-                result += "SCP ";
-
-            return $"{result}{scp.ToInt(" ")}";
+                if (cassieAnnouncement is CassieScpTerminationAnnouncement terminationAnnouncement && terminationAnnouncement._announcementTts == announcement1 && SubtitlePart.CheckEqualValues(terminationAnnouncement._subtitles, subtitleParts1))
+                {
+                    terminationAnnouncement._victims.Add(new Footprint(scp));
+                    terminationAnnouncement._remainingWait = 1f;
+                    return;
+                }
+            }
+            CassieQueuingScpTerminationEventArgs ev = new CassieQueuingScpTerminationEventArgs(scp, announcement1, subtitleParts1, hit);
+            LabApi.Events.Handlers.ServerEvents.OnCassieQueuingScpTermination(ev);
+            if (!ev.IsAllowed)
+                return;
+            string announcement2 = ev.Announcement;
+            SubtitlePart[] subtitleParts2 = ev.SubtitleParts;
+            new CassieScpTerminationAnnouncement(new Footprint(scp), announcement2, subtitleParts2).AddToQueue();
+            LabApi.Events.Handlers.ServerEvents.OnCassieQueuedScpTermination(new CassieQueuedScpTerminationEventArgs(scp, announcement2, subtitleParts2, hit));
         }
 
         private static IEnumerable<Player> LoadAppearanceAffectedPlayers(Player target)
