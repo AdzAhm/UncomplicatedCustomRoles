@@ -120,6 +120,10 @@ namespace UncomplicatedCustomRoles.Events
 
                 if (customRole.TryGetModule(out CustomScpAnnouncer announcer) && ev.Player.ReferenceHub.GetTeam() is not Team.SCPs)
                     TerminationQueue[ev.Player.Id] = new(announcer, DateTimeOffset.Now);
+                
+                if (customRole.HasModule<DropNothingOnDeath>())
+                    ev.Player.ClearInventory();
+
             }
         }
 

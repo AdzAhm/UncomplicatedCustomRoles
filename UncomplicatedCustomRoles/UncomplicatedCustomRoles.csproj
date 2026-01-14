@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UncomplicatedCustomRoles</RootNamespace>
-    <AssemblyName>UncomplicatedCustomRoles</AssemblyName>
+    <AssemblyName>UncomplicatedCustomRoles-EXILED</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -187,7 +187,7 @@
       <Version>4.3.4</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Json">
-      <Version>10.0.1</Version>
+      <Version>10.0.2</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />
