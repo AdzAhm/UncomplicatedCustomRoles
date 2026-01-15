@@ -9,9 +9,9 @@
  */
 
 using Exiled.API.Features;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using UncomplicatedCustomRoles.API.Struct;
 using UncomplicatedCustomRoles.Extensions;
 using UnityEngine;
@@ -89,7 +89,7 @@ namespace UncomplicatedCustomRoles.API.Features
         /// Gets the <see cref="Room"/> linked to the <see cref="SpawnPoint"/>, or null if not found
         /// </summary>
         [JsonIgnore]
-        public Room Room => RoomId != "" ? Room.List.Where(room => room.Identifier.name == RoomId).FirstOrDefault() : null;
+        public Room Room => RoomId != "" ? Room.List.FirstOrDefault(room => room.Identifier.name.Replace("Christmas", "").Replace("Halloween", "") == RoomId) : null;
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="Room"/> property is not <see langword="null"/>.
@@ -101,7 +101,7 @@ namespace UncomplicatedCustomRoles.API.Features
         internal SpawnPoint(string name, string roomId, Triplet<float, float, float> positionBase, Quadruple<float, float, float, float> rotationBase, Triplet<float, float, float> roomRotationBase, bool sync = true, bool @fixed = false)
         {
             Name = name;
-            RoomId = roomId;
+            RoomId = roomId.Replace("Christmas", "").Replace("Halloween", "");;
             PositionBase = positionBase;
             RotationBase = rotationBase;
             RoomRotationBase = roomRotationBase;
@@ -153,7 +153,7 @@ namespace UncomplicatedCustomRoles.API.Features
             player.Rotation = Rotation;
         }
 
-        public override string ToString() => $"SpawnPoint '{Name}' at {Room?.Name ?? "Fixed Position"} ({Position} @ {RoomRotation}) [{HasRoom}]";
+        public override string ToString() => $"SpawnPoint '{Name}' at {(Room ? Room.Name.Replace("Christmas", "").Replace("Halloween", "") : "RoomWasNotFound")} ({Position} @ {RoomRotation}) [{HasRoom}]";
 
         /// <summary>
         /// Creates a new <see cref="SpawnPoint"/> instance that is not synchronized with the network.

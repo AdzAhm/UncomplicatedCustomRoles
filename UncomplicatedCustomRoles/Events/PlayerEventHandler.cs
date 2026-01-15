@@ -47,6 +47,7 @@ namespace UncomplicatedCustomRoles.Events
             PlayerHandler.Hurt += OnHurt;
             PlayerHandler.PickingUpItem += OnPickingUp;
             PlayerHandler.Verified += OnVerified;
+            PlayerHandler.DamagingWindow += OnDamagingWindow;
 
             Instance = this;
         }
@@ -67,6 +68,7 @@ namespace UncomplicatedCustomRoles.Events
             PlayerHandler.Hurt -= OnHurt;
             PlayerHandler.PickingUpItem -= OnPickingUp;
             PlayerHandler.Verified -= OnVerified;
+            PlayerHandler.DamagingWindow -= OnDamagingWindow;
         }
 
         public void OnVerified(VerifiedEventArgs ev)
@@ -90,30 +92,22 @@ namespace UncomplicatedCustomRoles.Events
                 return;
 
             if (ev.Player.TryGetSummonedInstance(out SummonedCustomRole role))
-                if (ev.Effect is SeveredHands && role.Role.MaxScp330Candies >= role.Scp330Count)
+                switch (ev.Effect)
                 {
-                    LogManager.Debug($"Tried to add the {ev.Effect.name} but was not allowed due to {role.Scp330Count} <= {role.Role.MaxScp330Candies}");
-                    ev.IsAllowed = false;
+                    case SeveredHands when role.Role.MaxScp330Candies >= role.Scp330Count:
+                        LogManager.Debug($"Tried to add the {ev.Effect.name} but was not allowed due to {role.Scp330Count} <= {role.Role.MaxScp330Candies}");
+                        ev.IsAllowed = false;
+                        break;
+                    case CardiacArrest when role.Role.IsFriendOf is not null && role.Role.IsFriendOf.Contains(Team.SCPs):
+                    case AmnesiaVision or AmnesiaItems:
+                        ev.IsAllowed = false;
+                        break;
                 }
-                else if (ev.Effect is CardiacArrest && role.Role.IsFriendOf is not null && role.Role.IsFriendOf.Contains(Team.SCPs))
-                    ev.IsAllowed = false;
         }
 
         public void OnGenerator(ActivatingGeneratorEventArgs ev)
         {
             if (ev.Player.ReferenceHub.GetTeam() == Team.SCPs)
-                ev.IsAllowed = false;
-        }
-
-        public void OnWarheadLever(StartingEventArgs ev)
-        {
-            if (ev.Player.ReferenceHub.GetTeam() == Team.SCPs)
-                ev.IsAllowed = false;
-        }
-
-        public void OnScp079Recontainment(DamagingWindowEventArgs ev)
-        {
-            if (ev.Player.ReferenceHub.GetTeam() == Team.SCPs && (ev.Window.Type == Exiled.API.Enums.GlassType.Scp079Trigger || ev.Window.Type == Exiled.API.Enums.GlassType.Scp079))
                 ev.IsAllowed = false;
         }
 
@@ -126,14 +120,18 @@ namespace UncomplicatedCustomRoles.Events
 
                 if (customRole.TryGetModule(out CustomScpAnnouncer announcer) && ev.Player.ReferenceHub.GetTeam() is not Team.SCPs)
                     TerminationQueue[ev.Player.Id] = new(announcer, DateTimeOffset.Now);
+                
+                if (customRole.HasModule<DropNothingOnDeath>())
+                    ev.Player.ClearInventory();
+
             }
         }
 
         public void OnDied(DiedEventArgs ev)
         {
             if (TerminationQueue.TryGetValue(ev.Player.Id, out Tuple<CustomScpAnnouncer, DateTimeOffset> data) && (DateTimeOffset.Now - data.Item2).Milliseconds < 1300)
-                SpawnManager.HandleRecontainmentAnnoucement(ev.DamageHandler, data.Item1);
-
+                SpawnManager.AnnounceScpTermination(ev.Player.ReferenceHub, ev.DamageHandler);
+            
             TerminationQueue.TryRemove(ev.Player.Id, out _);
 
             SpawnManager.ClearCustomTypes(ev.Player);
@@ -339,6 +337,12 @@ namespace UncomplicatedCustomRoles.Events
         {
             if (ev.Player.TryGetSummonedInstance(out SummonedCustomRole summonedInstance))
                 ev.IsAllowed = ItemBan.ValidatePickup(summonedInstance, ev.Pickup);
+        }
+        
+        public void OnDamagingWindow(DamagingWindowEventArgs ev)
+        {
+            if (ev.Player.ReferenceHub.GetTeam() == Team.SCPs && (ev.Window.Type == Exiled.API.Enums.GlassType.Scp079Trigger || ev.Window.Type == Exiled.API.Enums.GlassType.Scp079))
+                ev.IsAllowed = false;
         }
     }
 }

@@ -6,13 +6,11 @@ using UncomplicatedCustomRoles.Extensions;
 using UncomplicatedCustomRoles.API.Interfaces;
 using UncomplicatedCustomRoles.Manager;
 using Exiled.Events.EventArgs.Scp330;
-using Exiled.Events.EventArgs.Scp939;
 using Exiled.Events.EventArgs.Scp049;
 
 using Scp049Handler = Exiled.Events.Handlers.Scp049;
 using Scp096Handler = Exiled.Events.Handlers.Scp096;
 using Scp330Handler = Exiled.Events.Handlers.Scp330;
-using Scp939Handler = Exiled.Events.Handlers.Scp939;
 
 namespace UncomplicatedCustomRoles.Events
 {
@@ -28,9 +26,6 @@ namespace UncomplicatedCustomRoles.Events
 
             // SCP-330
             Scp330Handler.InteractingScp330 += OnInteractingScp330;
-
-            // SCP-939
-            Scp939Handler.PlacingAmnesticCloud += OnScp939AmnesticCloud;
         }
 
         internal override void OnUnregistered()
@@ -43,9 +38,6 @@ namespace UncomplicatedCustomRoles.Events
 
             // SCP-330
             Scp330Handler.InteractingScp330 -= OnInteractingScp330;
-
-            // SCP-939
-            Scp939Handler.PlacingAmnesticCloud -= OnScp939AmnesticCloud;
         }
 
         public void OnAddingTarget(AddingTargetEventArgs ev)
@@ -89,12 +81,6 @@ namespace UncomplicatedCustomRoles.Events
 
                 LogManager.Debug($"Player {ev.Player} took {role.Scp330Count} candies!");
             }
-        }
-
-        public void OnScp939AmnesticCloud(PlacingAmnesticCloudEventArgs ev)
-        {
-            if (ev.Player.TryGetSummonedInstance(out SummonedCustomRole role) && role.HasModule<AmnesiaResistance>())
-                ev.IsAllowed = false;
         }
     }
 }

@@ -12,7 +12,9 @@ using Exiled.API.Features;
 using MEC;
 using PlayerRoles;
 using System;
+using Exiled.API.Extensions;
 using UncomplicatedCustomRoles.API.Features;
+using UncomplicatedCustomRoles.API.Features.CustomModules;
 using UncomplicatedCustomRoles.API.Interfaces;
 using UncomplicatedCustomRoles.Manager;
 using UnityEngine;
@@ -143,40 +145,62 @@ namespace UncomplicatedCustomRoles.Extensions
         }
 
         /// <summary>
-        /// Changes the CustomInfo of a <see cref="Player"/>
+        /// Refresh the CustomInfo of a <see cref="Player"/> that has a <see cref="ICustomRole"/>.
         /// </summary>
         /// <param name="player"></param>
-        /// <param name="value"></param>
-        public static void ApplyClearCustomInfo(this Player player, string value)
+        public static void RefreshInfoArea(this Player player)
         {
-            player.CustomInfo = ProcessCustomInfo(value);
-        }
-
-        /// <summary>
-        /// Changes the CustomInfo of a <see cref="Player"/> overriding also the player Role
-        /// </summary>
-        /// <param name="player"></param>
-        /// <param name="customInfo"></param>
-        /// <param name="role"></param>
-        public static void ApplyCustomInfoAndRoleName(this Player player, string customInfo, string role)
-        {
-            player.InfoArea |= PlayerInfoArea.Nickname;
-            player.InfoArea &= ~PlayerInfoArea.Role; // Hide role
-            player.InfoArea &= ~PlayerInfoArea.Nickname; // Hide nickname*/
-
-            string nick = player.DisplayNickname.Replace("<color=#855439>*</color>", "");
-
-
-            if (customInfo is null || customInfo.Length < 1)
+            ICustomRole role = player.TryGetSummonedInstance(out var summonedCustomRole) ? summonedCustomRole.Role : null;
+            if (role is null)
             {
-                LogManager.Silent("Applying only role name (order: NICK-ROLE)");
-                player.ReferenceHub.nicknameSync.Network_customPlayerInfoString = $"{nick}\n{role}";
+                LogManager.Warn($"Tried to refresh InfoArea for player {player.Nickname} but they don't have a custom role.");
+                return;
             }
-            else
+            string customInfo = ProcessCustomInfo(PlaceholderManager.ApplyPlaceholders(role.CustomInfo, player, role));
+            string roleName = role.Name;
+            string nickName = player.DisplayNickname.Replace("<color=#855439>*</color>", "");
+            bool customInfoExists = !string.IsNullOrEmpty(customInfo);
+            bool roleNameExists = role.OverrideRoleName;
+            
+            player.InfoArea |= PlayerInfoArea.CustomInfo;
+            player.InfoArea &= ~PlayerInfoArea.Role;
+            player.InfoArea &= ~PlayerInfoArea.Nickname;
+            
+            if (!NicknameSync.ValidateCustomInfo(customInfo, out string customInfoError) && customInfoExists)
             {
-                LogManager.Silent("Applying role name and custom info (CI-NICK-ROLE)");
-                player.ReferenceHub.nicknameSync.Network_customPlayerInfoString = $"{ProcessCustomInfo(customInfo)}\n{nick}\n{role}";
+                LogManager.Error($"CustomInfo is not correct. Setting CustomInfo to empty.\nCustomInfo: {customInfo}\nError: {customInfoError}");
+                customInfoExists = false;
             }
+            
+            if (!NicknameSync.ValidateCustomInfo(roleName, out string roleNameError) && roleNameExists)
+            {
+                LogManager.Error($"RoleName is not correct. Setting CustomInfo to empty.\nRoleName: {roleName}\nError: {roleNameError}");
+                roleNameExists = false;
+            }
+            
+            player.CustomInfo = "<color=#FFFFFF></color>%custominfo%%nickname%%rolename%";
+            
+            if (summonedCustomRole.TryGetModule(out CustomInfoOrder customInfoOrderModule))
+                player.CustomInfo = $"<color=#FFFFFF></color>{customInfoOrderModule.Order}";
+
+            if (summonedCustomRole.TryGetModule(out ColorfulNickname colorfulNickname))
+            {
+                if (string.IsNullOrEmpty(colorfulNickname.Color))
+                    return;
+                string nick = player.DisplayNickname.Replace("<color=#855439>*</color>", "");
+                string color = colorfulNickname.Color.StartsWith("#") ? colorfulNickname.Color : $"#{colorfulNickname.Color}";
+                if (!Misc.AcceptedColours.Contains(color.Replace("#", "")))
+                {
+                    LogManager.Warn($"The color {color} is not acceptable by the game in ColorfulNicknames! Please use a valid hex color code.");
+                    return;
+                }
+                nickName = $"<color={color}>{nick}</color>";
+            }
+            
+            
+            player.CustomInfo = player.CustomInfo.Replace("%custominfo%", customInfoExists ? $"{customInfo}\n" : "");
+            player.CustomInfo = player.CustomInfo.Replace("%nickname%", $"{nickName}\n");
+            player.CustomInfo = player.CustomInfo.Replace("%rolename%", roleNameExists ? $"{roleName}\n" : role.Role.GetFullName()+"\n");
         }
 
         /// <summary>

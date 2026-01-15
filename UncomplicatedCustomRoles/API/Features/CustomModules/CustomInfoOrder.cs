@@ -8,15 +8,17 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-using PlayerRoles;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace UncomplicatedCustomRoles.API.Features
+namespace UncomplicatedCustomRoles.API.Features.CustomModules
 {
-    public class DisguiseTeam
+    public class CustomInfoOrder : CustomModule
     {
-        public static readonly ConcurrentDictionary<int, Team> List = new();
-        public static readonly Dictionary<int, PlayerRoleBase> RoleBaseList = new();
+        public override List<string> RequiredArgs => new()
+        {
+            "order"
+        };
+
+        internal string Order => TryGetStringValue("order", "%custominfo%%nickname%%rolename%");
     }
 }

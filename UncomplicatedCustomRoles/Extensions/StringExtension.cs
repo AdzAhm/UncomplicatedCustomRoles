@@ -8,11 +8,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 
 namespace UncomplicatedCustomRoles.Extensions
 {
@@ -45,11 +45,8 @@ namespace UncomplicatedCustomRoles.Extensions
 
         public static string BulkReplace(this string str, Dictionary<string, object> replace, string matrix = null)
         {
-            if (str is null)
-                return string.Empty;
-
             foreach (KeyValuePair<string, object> kvp in replace.Where(kvp => kvp.Value is not null))
-                str = str.Replace(matrix is null ? kvp.Key : matrix.Replace("<val>", kvp.Key), kvp.Value.ToString());
+                str = str.Replace(matrix is null ? kvp.Key : matrix.Replace("<val>", kvp.Key), kvp.Value?.ToString());
 
             return str;
         }
@@ -62,16 +59,30 @@ namespace UncomplicatedCustomRoles.Extensions
             return str;
         }
 
+        public static string RemoveBracketsOnEndOfName(this string name)
+        {
+            var bracketStart = name.IndexOf('(');
+
+            if (bracketStart > 0)
+                name = name.Remove(bracketStart, name.Length - bracketStart);
+
+            return name;
+        }
+        
         public static HttpStatusCode GetStatusCode(this string str, out string message)
         {
-            JObject obj = JObject.Parse(str);
+            JsonDocument doc = JsonDocument.Parse(str);
+            JsonElement root = doc.RootElement;
 
             message = null;
-            if (obj.TryGetValue("message", out JToken token))
-                message = token.ToString();
+            if (root.TryGetProperty("message", out JsonElement messageElement))
+            {
+                message = messageElement.GetString();
+            }
 
-            if (obj.TryGetValue("status", out JToken status) && Enum.TryParse(status.ToString(), out HttpStatusCode statusCode))
+            if (root.TryGetProperty("status", out JsonElement status) && Enum.TryParse(status.ToString(), out HttpStatusCode statusCode))
                 return statusCode;
+            
 
             return HttpStatusCode.Unused;
         }

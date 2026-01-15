@@ -1,15 +1,22 @@
 ﻿/*
  * This file is a part of the UncomplicatedCustomRoles project.
- * 
+ *
  * Copyright (c) 2023-present FoxWorn3365 (Federico Cosma) <me@fcosma.it>
- * 
+ *
  * This file is licensed under the GNU Affero General Public License v3.0.
  * You should have received a copy of the AGPL license along with this file.
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Emit;
 using Achievements.Handlers;
 using HarmonyLib;
+using Interactables.Interobjects.DoorUtils;
 using InventorySystem.Disarming;
 using InventorySystem.Items;
 using InventorySystem.Items.ThrowableProjectiles;
@@ -17,14 +24,8 @@ using InventorySystem.Searching;
 using PlayerRoles;
 using PlayerRoles.PlayableScps.Scp079.Rewards;
 using PlayerRoles.PlayableScps.Scp939.Mimicry;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
-using System.Reflection.Emit;
 using UncomplicatedCustomRoles.API.Features;
 using UncomplicatedCustomRoles.Manager;
-
 using static HarmonyLib.AccessTools;
 
 namespace UncomplicatedCustomRoles.Patches
@@ -40,7 +41,7 @@ namespace UncomplicatedCustomRoles.Patches
             if (__instance.Hub is not null && DisguiseTeam.RoleBaseList.TryGetValue(__instance.Hub.PlayerId, out PlayerRoleBase role))
             {
                 if (role is null)
-                    LogManager.Error($"[UCR] Disguised role for player {__instance.Hub.PlayerId} is null!");
+                    LogManager.Error($"Disguised role for player {__instance.Hub.PlayerId} is null!");
 
                 __result = role;
 
@@ -50,7 +51,7 @@ namespace UncomplicatedCustomRoles.Patches
             return true;
         }
     }
-
+    
     [HarmonyPatch(typeof(PlayerRolesUtils), nameof(PlayerRolesUtils.GetRoleId))]
     internal class PlayerRolesUtilsPatch
     {
@@ -121,18 +122,71 @@ namespace UncomplicatedCustomRoles.Patches
         }
     }
 
-
     [HarmonyPatch(typeof(PickupSearchCompletor), nameof(PickupSearchCompletor.ValidateAny))]
     public class PickupSearchCompletorPatch
     {
         static bool Prefix(PickupSearchCompletor __instance, ref bool __result)
         {
-            if (!DisguiseTeam.List.TryGetValue(__instance.Hub.PlayerId, out Team team) || team != Team.SCPs || __instance.Hub.roleManager.CurrentRole.RoleTypeId.GetTeam() == Team.SCPs) 
-                return true;
-
-            __result = !__instance.TargetPickup.Info.Locked && !__instance.Hub.inventory.IsDisarmed() && !__instance.Hub.interCoordinator.AnyBlocker(BlockedInteraction.GrabItems);
-
+            if (!DisguiseTeam.List.TryGetValue(__instance.Hub.PlayerId, out Team team) || team != Team.SCPs ||
+                __instance.Hub.roleManager.CurrentRole.RoleTypeId.GetTeam() == Team.SCPs) return true;
+            __result = !__instance.TargetPickup.Info.Locked && !__instance.Hub.inventory.IsDisarmed() &&
+                       !__instance.Hub.interCoordinator.AnyBlocker(BlockedInteraction.GrabItems);
             return false;
+        }
+    }
+    
+    [HarmonyPatch(typeof(DoorPermissionsPolicy))]
+    public class DoorPermissionsPolicyPatch
+    {
+        static MethodBase TargetMethod()
+        {
+            return Method(typeof(DoorPermissionsPolicy), nameof(DoorPermissionsPolicy.CheckPermissions), new Type[] { typeof(ReferenceHub), typeof(IDoorPermissionRequester), typeof(PermissionUsed).MakeByRefType() });
+        }
+        
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> newInstructions = new(instructions);
+            for (int i = 0; i < newInstructions.Count; i++)
+            {
+                if (newInstructions[i].opcode == OpCodes.Callvirt && 
+                    newInstructions[i].operand is MethodInfo method && 
+                    method == PropertyGetter(typeof(PlayerRoleManager), nameof(PlayerRoleManager.CurrentRole)))
+                {
+                    newInstructions.Insert(i, new CodeInstruction(OpCodes.Ldarg_1));
+                    i++;
+                    newInstructions.Insert(i, new CodeInstruction(OpCodes.Call, Method(typeof(PlayerRolesUtils), nameof(PlayerRolesUtils.GetRoleId), new Type[] { typeof(ReferenceHub) })));
+                    i++;
+                    newInstructions[i] = new CodeInstruction(OpCodes.Callvirt, Method(typeof(PlayerRoleManager), nameof(PlayerRoleManager.GetRoleBase), new Type[] { typeof(RoleTypeId) }));
+                    break;
+                }
+            }
+
+            return newInstructions;
+        }
+    }
+    
+    [HarmonyPatch(typeof(DoorPermissionsPolicyExtensions), nameof(DoorPermissionsPolicyExtensions.GetCombinedPermissions))]
+    public class DoorPermissionsPolicyExtensionsPatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> newInstructions = new(instructions);
+            for (int i = 0; i < newInstructions.Count; i++)
+            {
+                if (newInstructions[i].opcode == OpCodes.Callvirt && 
+                    newInstructions[i].operand is MethodInfo method && 
+                    method == PropertyGetter(typeof(PlayerRoleManager), nameof(PlayerRoleManager.CurrentRole)))
+                {
+                    newInstructions.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+                    i++;
+                    newInstructions.Insert(i, new CodeInstruction(OpCodes.Call, Method(typeof(PlayerRolesUtils), nameof(PlayerRolesUtils.GetRoleId), new[] { typeof(ReferenceHub) })));
+                    i++;
+                    newInstructions[i] = new CodeInstruction(OpCodes.Callvirt, Method(typeof(PlayerRoleManager), nameof(PlayerRoleManager.GetRoleBase), new[] { typeof(RoleTypeId) }));
+                    break;
+                }
+            }
+
+            return newInstructions;
         }
     }
 }
